@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="api.js"></script>
+    <script>
+        function leftClick() {
+            speed = document.getElementById('left').value;
+            robot.setLeftSpeed(speed);
+        }
+        function rightClick() {
+            speed = document.getElementById('right').value;
+            robot.setRightSpeed(speed);
+        }
+    </script>
+</head>
+<body>
+    左轮
+    <input id="left" oninput="leftClick()">
+    <button onclick="leftClick()">设置</button>
+    </br>
+    右轮
+    <input id="right" oninput="rightClick()">
+    <button onclick="rightClick()" >设置</button>
+</body>
+</html>

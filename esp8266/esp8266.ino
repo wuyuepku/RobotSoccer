@@ -35,7 +35,8 @@ void handleRight() {
   for(int i = 0;i < server.args();++i) {
     if(server.argName(i) == "speed") {
       sscanf(server.arg(i).c_str(), "%d", &rightSpeed);
-      if(rightSpeed < 0 || rightSpeed > 100) {
+      rightSpeed -= 100;
+      if(rightSpeed < -100 || rightSpeed > 100) {
         rightSpeed = 0;
       }
       server.send(200, "text/text", "success!");
@@ -49,7 +50,8 @@ void handleLeft() {
   for(int i = 0;i < server.args();++i) {
     if(server.argName(i) == "speed") {
       sscanf(server.arg(i).c_str(), "%d", &leftSpeed);
-      if(leftSpeed < 0 || leftSpeed > 100) {
+      leftSpeed -= 100;
+      if(leftSpeed < -100 || leftSpeed > 100) {
         leftSpeed = 0;
       }
       server.send(200, "text/text", "success!");
