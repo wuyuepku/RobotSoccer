@@ -75,7 +75,7 @@ void handleRoot() {
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(leftPinA, OUTPUT);
+  pinMode(leftPinA, OUTPUT);  
   pinMode(leftPinB, OUTPUT);
   pinMode(rightPinA, OUTPUT);
   pinMode(rightPinB, OUTPUT);
