@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <title>机器人足球！</title>
+    <style>
+        body {
+            max-width: 1000px;
+            padding: 20px;
+            margin: 0 auto 0 auto;
+        }
+        .led {
+            position: absolute;
+            width: 10px;
+            height: 50px;
+            border-radius: 10px;
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>PC版机器人控制器(●'◡'●)</h1>
+    <h2>一、使用说明</h2>
+    <p>请保证只有一个页面正在控制设备，多个同时控制将产生冲突！</p>
+    <button class="btn btn-success" onclick="control_toggle()" id="controlbtn">开始控制</button><br><br>
+    <p>使用 ASWD 进行基础控制</p>
+    
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/socket.io.min.js"></script>
+    <script src="js/paho-mqtt.min.js"></script>
+
+    <script>
+
+    var mqtt;
+    var host = 'onedawn.top';
+    var port = 9001;
+
+    var left_duty = 0;
+    var left_full = 1023;  // -1023 to reverse direction
+    var right_duty = 0;
+    var right_full = 1023;
+    var send_time;
+    var running = false;
+
+    var robot_username = "gGf0H5Rl";
+    var robot_password = "JivMdb8Yz02u5mgEPGIVjeHF4clZqBRx";
+
+    var key_up = false;
+    var key_down = false;
+    var key_left = false;
+    var key_right = false;
+
+    function update_speed() {
+        console.log("up:" + key_up + ",left:" + key_left + ",down:" + key_down + ",right:" + key_right);
+        if (key_up && !key_left && !key_right) {
+            left_duty = left_full;
+            right_duty = right_full;
+        } else if (key_down && !key_left && !key_right) {
+            left_duty = -left_full;
+            right_duty = -right_full;
+        } else if (key_left && !key_up && !key_down) {
+            left_duty = -left_full;
+            right_duty = right_full;
+        } else if (key_right && !key_up && !key_down) {
+            left_duty = left_full;
+            right_duty = -right_full;
+        } else {
+            left_duty = 0;
+            right_duty = 0;
+        }
+    }
+
+    function control_toggle() {
+        if (running) {
+            $("#controlbtn").html("开始控制");
+            $("#controlbtn").removeClass("btn-danger");
+            $("#controlbtn").addClass("btn-success");
+            running = false;
+        } else {
+            $("#controlbtn").html("停止控制");
+            $("#controlbtn").removeClass("btn-success");
+            $("#controlbtn").addClass("btn-danger");
+            running = true;
+            set_speed(left_duty, right_duty);
+        }
+    }
+
+    function set_speed(left_duty, right_duty) {
+        let raw_message = '' + left_duty + ' ' + right_duty;
+        message = new Paho.MQTT.Message(raw_message);
+        message.destinationName = "iot/" + robot_username + "/set_speed";
+        console.log('sending message: ' + raw_message );
+        mqtt.send(message);
+    }
+
+    function onConnect() {
+        console.log('connected.');
+
+        var subOptions = {
+            qos: 1,
+            onSuccess: onSubscribe
+        };
+        mqtt.subscribe("iot/" + robot_username + "/set_speed_ret", subOptions);
+    }
+
+    // 订阅主题成功事件
+    function onSubscribe(context) {
+        console.log('subscribe success');
+        console.log(context);
+    }
+
+    // 连接失败事件
+    function onFailure(message) {
+        console.log('connect failed.');
+    }
+
+    // onMessageArrived 事件
+    function onMessageArrived(message) {
+        console.log(message.payloadString);
+        if (running && message.payloadString == "OK") {
+            set_speed(left_duty, right_duty);
+        }
+    }
+
+    // 建立 MQTT websocket 连接
+    function MQTTconnect() {
+        console.log('connecting to ' + host + ':' + port);
+        mqtt = new Paho.MQTT.Client(host, port, 'host');
+        var options = {
+            timeout: 3,
+            useSSL: true,
+            onSuccess: onConnect,
+            onFailure: onFailure,
+            userName: robot_username,
+            password: robot_password,
+            mqttVersion: 4
+        };
+        mqtt.onMessageArrived = onMessageArrived;
+        mqtt.connect(options);
+    }
+
+    $(MQTTconnect);
+
+    document.onkeydown = function(event){
+        var e = event || window.event || arguments.callee.caller.arguments[0];
+        if (e && e.key == "w") key_up = true;
+        if (e && e.key == "a") key_left = true;
+        if (e && e.key == "s") key_down = true;
+        if (e && e.key == "d") key_right = true;
+        update_speed();
+        console.log("left:" + left_duty + " right:" + right_duty);
+    }
+    document.onkeyup = function(event){
+        var e = event || window.event || arguments.callee.caller.arguments[0];
+        if (e && e.key == "w") key_up = false;
+        if (e && e.key == "a") key_left = false;
+        if (e && e.key == "s") key_down = false;
+        if (e && e.key == "d") key_right = false;
+        update_speed();
+        console.log("left:" + left_duty + " right:" + right_duty);
+    }
+
+    </script>
+
+</body>
+</html>
